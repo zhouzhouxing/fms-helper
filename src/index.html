@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMS Helper</title>
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 顶部标题栏 -->
+    <header class="v2-toolbar">
+        <div class="toolbar-left">
+            <span class="app-title">FMS Helper</span>
+            <span class="version-tag">V2</span>
+            <span class="version-number">v2.3.3</span>
+        </div>
+        <div class="toolbar-right">
+            <button id="btnGenerate" class="btn btn-primary">生成脚本</button>
+            <button id="btnAdvancedSettings" class="btn btn-default" title="高级设置">⚙ 高级设置</button>
+            <button id="btnAbout" class="btn btn-default" title="关于">关于</button>
+        </div>
+    </header>
+
+    <!-- 更新提示条（默认隐藏） -->
+    <div id="updateBar" class="update-bar">
+        <span id="updateText">📦 正在检查更新...</span>
+        <div id="updateProgress" class="update-progress" style="display:none;">
+            <div id="updateProgressBar" class="update-progress-bar"></div>
+        </div>
+        <button id="btnUpdateInstall" class="btn btn-primary btn-sm" style="display:none;">立即重启</button>
+        <button id="btnUpdateDismiss" class="btn btn-cancel btn-sm" style="display:none;">稍后</button>
+    </div>
+
+    <!-- 主内容区：左右分栏（I方案布局） -->
+    <div class="v2-layout">
+
+        <!-- ====== 左侧面板：配置区（可滚动） ====== -->
+        <div class="v2-panel v2-panel-left">
+            <div class="panel-header">
+                <span class="panel-title">⚙ 配置</span>
+            </div>
+            <div class="panel-body">
+
+                <!-- 1. 模式选择 -->
+                <div class="mode-row">
+                    <div class="mode-chip active" data-mode="obc-single">OBC 单相</div>
+                    <div class="mode-chip" data-mode="obc-three">OBC 三相</div>
+                    <div class="mode-chip" data-mode="obc-mixed">单相+三相</div>
+                    <div class="mode-chip" data-mode="dcdc-only">DCDC</div>
+                    <div class="mode-chip" data-mode="invert">逆变</div>
+                    <div class="mode-chip" data-mode="obc-single-dcdc">单相+DCDC</div>
+                    <div class="mode-chip" data-mode="obc-three-dcdc">三相+DCDC</div>
+                    <div class="mode-chip" data-mode="obc-mixed-dcdc">单相+三相+DCDC</div>
+                </div>
+                <select id="testMode" style="display:none">
+                    <option value="obc-single" selected>OBC单相</option>
+                    <option value="obc-three">OBC三相</option>
+                    <option value="obc-mixed">OBC单相+三相</option>
+                    <option value="obc-single-dcdc">OBC单相+DCDC</option>
+                    <option value="obc-three-dcdc">OBC三相+DCDC</option>
+                    <option value="obc-mixed-dcdc">OBC单相+三相+DCDC</option>
+                    <option value="dcdc-only">DCDC</option>
+                    <option value="invert">逆变</option>
+                </select>
+
+                <div class="config-divider"></div>
+
+        <!-- 2a. OBC点位表格区 -->
+        <section class="v2-section point-section obc-section" id="obcPointSection">
+            <div class="section-label">OBC 测试点位 <span class="section-badge" id="obcPointCount">0</span></div>
+            <div class="table-wrap">
+                <table class="point-table">
+                    <thead>
+                        <tr>
+                            <th class="col-seq">序号</th>
+                            <th>KL30电压 <span class="unit">(V)</span></th>
+                            <th>输入电压 <span class="unit">(V)</span> <span class="required">*</span></th>
+                            <th>频率 <span class="unit">(Hz)</span></th>
+                            <th>输出电压 <span class="unit">(V)</span> <span class="required">*</span></th>
+                            <th>输出电流 <span class="unit">(A)</span></th>
+                            <th>输出功率 <span class="unit">(W)</span> <span class="required">*</span></th>
+                            <th>功率因数最小</th>
+                            <th>功率因数最大</th>
+                            <th>效率最小 <span class="unit">(%)</span></th>
+                            <th>效率最大 <span class="unit">(%)</span></th>
+                            <th>输入电流 <span class="unit">(A)</span></th>
+                            <th class="tri-phase-col" style="display:none">三相</th>
+                            <th class="col-action">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pointTableBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="btnAddPoint" class="btn btn-outline obc-section">+ 添加OBC点位</button>
+        </section>
+
+        <!-- 2b. DCDC点位表格区 -->
+        <section class="v2-section point-section dcdc-section" id="dcdcPointSection" style="display:none">
+            <div class="section-label">DCDC 测试点位 <span class="section-badge" id="dcdcPointCount">0</span></div>
+            <div class="table-wrap">
+                <table class="point-table">
+                    <thead>
+                        <tr>
+                            <th class="col-seq">序号</th>
+                            <th>KL30电压 <span class="unit">(V)</span></th>
+                            <th>输入电压 <span class="unit">(V)</span> <span class="required">*</span></th>
+                            <th>输入电流 <span class="unit">(A)</span></th>
+                            <th>输出电压 <span class="unit">(V)</span> <span class="required">*</span></th>
+                            <th>输出电流 <span class="unit">(A)</span></th>
+                            <th>输出功率 <span class="unit">(W)</span> <span class="required">*</span></th>
+                            <th>效率最小 <span class="unit">(%)</span></th>
+                            <th>效率最大 <span class="unit">(%)</span></th>
+                            <th class="col-action">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dcdcPointTableBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="btnAddDcdcPoint" class="btn btn-outline">+ 添加DCDC点位</button>
+        </section>
+
+        <!-- 3a. OBC误差参数区 -->
+        <section class="v2-section error-section obc-section" id="obcErrorSection">
+            <div class="section-label">OBC 误差参数</div>
+            <div class="error-grid">
+                <!-- 左列：输入侧 -->
+                <div class="error-group">
+                    <h3 class="error-group-title">输入侧</h3>
+                    <div class="form-group">
+                        <label>输入电压误差 <span class="unit">(V)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="vinError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="vinAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输入电流误差 <span class="unit">(A)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="iinError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="iinAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>频率误差 <span class="unit">(Hz)</span></label>
+                        <input type="number" id="freqError" value="" step="0.1">
+                    </div>
+                </div>
+                <!-- 右列：输出侧 -->
+                <div class="error-group">
+                    <h3 class="error-group-title">输出侧</h3>
+                    <div class="form-group">
+                        <label>输出电压误差 <span class="unit">(V)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="voutError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="voutAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输出电流误差 <span class="unit">(A)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="ioutError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="ioutAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>效率 <span class="unit">(%)</span></label>
+                        <input type="number" id="efficiency" value="96" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="includeWake"> 包含唤醒步骤
+                        </label>
+                    </div>
+                    <div class="form-group three-phase-only">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="vinType"> 相电压（不勾选则为线电压）
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>DC输出端</label>
+                        <select id="dcOutPoint">
+                            <option value="">不操作</option>
+                            <option value="连接">连接</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>KL15</label>
+                        <select id="kl15Option">
+                            <option value="">不操作</option>
+                            <option value="打开">打开</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3b. DCDC误差参数区（已移除，与OBC共用） -->
+
+        <!-- 3c. DCDC误差参数区 -->
+        <section class="v2-section error-section dcdc-section" id="dcdcErrorSection" style="display:none">
+            <div class="section-label">DCDC 误差参数</div>
+            <div class="error-grid">
+                <!-- 左列：输入侧 -->
+                <div class="error-group">
+                    <h3 class="error-group-title">输入侧</h3>
+                    <div class="form-group">
+                        <label>输入电压误差 <span class="unit">(V)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="dcdcVinError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="dcdcVinAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输入电流误差 <span class="unit">(A)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="dcdcIinError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="dcdcIinAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                </div>
+                <!-- 右列：输出侧 -->
+                <div class="error-group">
+                    <h3 class="error-group-title">输出侧</h3>
+                    <div class="form-group">
+                        <label>输出电压误差 <span class="unit">(V)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="dcdcVoutError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="dcdcVoutAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输出电流误差 <span class="unit">(A)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="dcdcIoutError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="dcdcIoutAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>效率 <span class="unit">(%)</span></label>
+                        <input type="number" id="dcdcEfficiency" value="94" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>拉载步进值 <span class="unit">(A)</span></label>
+                        <input type="number" id="dcdcLoadStepValue" value="" step="1" placeholder="默认10">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="dcdcIncludeWake"> 包含唤醒步骤
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>DC输出端</label>
+                        <select id="dcdcDcOutPoint">
+                            <option value="">不操作</option>
+                            <option value="连接" selected>连接</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>KL15</label>
+                        <select id="dcdcKl15Option">
+                            <option value="">不操作</option>
+                            <option value="打开">打开</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>48V继电器</label>
+                        <select id="dcdcDcOutSwitchRelay">
+                            <option value="">不操作</option>
+                            <option value="开">开</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2c. 逆差点位表格区 -->
+        <section class="v2-section point-section invert-section" id="invertPointSection" style="display:none">
+            <div class="section-label">逆变 测试点位 <span class="section-badge" id="invertPointCount">0</span></div>
+            <div class="table-wrap">
+                <table class="point-table">
+                    <thead>
+                        <tr>
+                            <th class="col-seq">序号</th>
+                            <th>KL30电压 <span class="unit">(V)</span></th>
+                            <th>输出电压 <span class="unit">(V)</span> <span class="required">*</span></th>
+                            <th>输出电流 <span class="unit">(A)</span> <span class="required">*</span></th>
+                            <th>输入电压 <span class="unit">(V)</span></th>
+                            <th>输出功率 <span class="unit">(W)</span></th>
+                            <th>输出频率 <span class="unit">(Hz)</span></th>
+                            <th>总谐波电压最小 <span class="unit">(%)</span></th>
+                            <th>总谐波电压最大 <span class="unit">(%)</span></th>
+                            <th>功率因数最小</th>
+                            <th>功率因数最大</th>
+                            <th>效率最小 <span class="unit">(%)</span></th>
+                            <th>效率最大 <span class="unit">(%)</span></th>
+                            <th class="col-action">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invertPointTableBody">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            <button id="btnAddInvertPoint" class="btn btn-outline">+ 添加逆差点位</button>
+        </section>
+
+        <!-- 3d. 逆变误差参数区 -->
+        <section class="v2-section error-section invert-section" id="invertErrorSection" style="display:none">
+            <div class="section-label">逆变 误差参数</div>
+            <div class="error-grid">
+                <!-- 左列：输出侧（逆变输出=AC侧，对应OBC输入） -->
+                <div class="error-group">
+                    <h3 class="error-group-title">输出侧（AC）</h3>
+                    <div class="form-group">
+                        <label>输出电压误差 <span class="unit">(V)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="invertVoutError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="invertVoutAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输出电流误差 <span class="unit">(A)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="invertIoutError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="invertIoutAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输出频率误差 <span class="unit">(Hz)</span></label>
+                        <input type="number" id="invertFreqError" value="" step="0.1">
+                    </div>
+                </div>
+                <!-- 右列：输入侧（逆变输入=DC侧，对应OBC输出） -->
+                <div class="error-group">
+                    <h3 class="error-group-title">输入侧（DC）</h3>
+                    <div class="form-group">
+                        <label>输入电压误差 <span class="unit">(V)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="invertVinError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="invertVinAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>输入电流误差 <span class="unit">(A)</span> <span class="required">*</span> / 精度 <span class="unit">(%)</span></label>
+                        <div class="dual-input">
+                            <input type="number" id="invertIinError" value="" step="0.1" placeholder="绝对误差">
+                            <input type="number" id="invertIinAccuracy" value="" step="0.1" placeholder="精度%">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>效率 <span class="unit">(%)</span></label>
+                        <input type="number" id="invertEfficiency" value="94" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="invertIncludeWake"> 包含唤醒步骤
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label>DC输出端</label>
+                        <select id="invertDcOutPoint">
+                            <option value="">不操作</option>
+                            <option value="连接">连接</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>CC电阻值</label>
+                        <select id="invertCcResistance">
+                            <option value="1000" selected>1000</option>
+                            <option value="2000">2000</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>负载模式</label>
+                        <select id="invertLoadMode">
+                            <option value="CR" selected>CR</option>
+                            <option value="CC">CC</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+            </div><!-- /panel-body -->
+        </div><!-- /v2-panel-left -->
+
+        <!-- ====== 右侧面板：预览+导出 ====== -->
+        <div class="v2-panel v2-panel-right">
+            <div class="panel-header">
+                <span class="panel-title">👁 预览</span>
+                <span class="panel-badge" id="stepCount">0步</span>
+            </div>
+            <div class="panel-body">
+                <div id="previewContainer" class="preview-container">
+                    <p class="empty-hint">点击"生成脚本"查看结果</p>
+                </div>
+            </div>
+            <div class="panel-footer">
+                <div class="export-row">
+                    <input type="text" id="exportFileName" placeholder="配置文件名称" value="">
+                    <button id="btnExport" class="btn btn-export">导出</button>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /v2-layout -->
+
+    <!-- 全局消息提示 -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- 关于弹窗 -->
+    <div id="aboutModal" class="modal-overlay">
+        <div class="modal-container modal-sm">
+            <h2 class="modal-title">关于 FMS Helper</h2>
+            <div class="about-content">
+                <p class="about-version">FMS Helper <span id="aboutVersion">v2.3.0</span></p>
+                <p class="about-desc">测试脚本自动生成工具</p>
+                <p class="about-date" id="aboutBuildDate"></p>
+                <p class="about-update-status" id="aboutUpdateStatus"></p>
+                <p class="about-changelog-link" id="aboutChangelogLink">📋 查看更新日志</p>
+            </div>
+            <div class="modal-footer about-footer">
+                <button id="btnCheckUpdate" class="btn btn-primary-outline btn-uniform">检查更新</button>
+                <button id="btnAboutOk" class="btn btn-primary btn-uniform">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 更新公告弹窗 -->
+    <div id="changelogModal" class="modal-overlay">
+        <div class="modal-container modal-sm">
+            <h2 class="modal-title">🎉 FMS Helper 已更新</h2>
+            <div class="about-content">
+                <p class="about-version" id="changelogVersion">v2.3.0</p>
+                <div class="changelog-list" id="changelogList">
+                    <p class="changelog-item">· 修复 高级设置恢复默认后取消无法撤回</p>
+                    <p class="changelog-item">· 修复 检查更新重复触发的问题</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="btnChangelogOk" class="btn btn-primary btn-uniform">知道了</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 确认弹窗 -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-container modal-sm">
+            <h2 id="confirmTitle" class="modal-title">确认</h2>
+            <p id="confirmMessage" class="confirm-message"></p>
+            <div class="modal-footer">
+                <button id="btnConfirmCancel" class="btn btn-primary-outline btn-uniform">取消</button>
+                <button id="btnConfirmOk" class="btn btn-primary btn-uniform">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 高级设置弹窗 -->
+    <div id="advancedSettingsModal" class="modal-overlay">
+        <div class="modal-container">
+            <h2 class="modal-title">⚙ 高级设置</h2>
+            <p class="settings-tip">修改参数后点击"保存"生效。改乱了可点"恢复默认"还原全部。</p>
+
+            <!-- 标签页 -->
+            <div class="settings-tabs">
+                <button class="settings-tab active" data-tab="obc">OBC</button>
+                <button class="settings-tab" data-tab="dcdc">DCDC</button>
+                <button class="settings-tab" data-tab="invert">逆变</button>
+            </div>
+
+            <!-- OBC 参数 -->
+            <div class="settings-panel active" data-panel="obc">
+                <div class="settings-grid">
+                    <label>步骤延时 <input type="number" id="set_obc_delay" step="100"> <span class="unit">ms</span></label>
+                    <label>触发超时 <input type="number" id="set_obc_triggerTimeOut" step="1000"> <span class="unit">ms</span></label>
+                    <label>触发调节时间 <input type="number" id="set_obc_adjustTime" step="100"> <span class="unit">ms</span></label>
+                    <label>重测次数 <input type="number" id="set_obc_reTestCount" step="1"> <span class="unit">次</span></label>
+                    <label>重测间隔 <input type="number" id="set_obc_reTestTime" step="100"> <span class="unit">ms</span></label>
+                    <label>KL30电压 <input type="number" id="set_obc_kl30Volt" step="0.1"> <span class="unit">V</span></label>
+                    <label>低压限流 <input type="number" id="set_obc_lowVoltLimitCurr" step="0.1"> <span class="unit">A</span></label>
+                    <label>电池限流 <input type="number" id="set_obc_vbatLimitCurr" step="0.1"> <span class="unit">A</span></label>
+                    <label>CC电阻 <input type="number" id="set_obc_ccResistance" step="10"> <span class="unit">Ω</span></label>
+                    <label>CP百分比 <input type="number" id="set_obc_cpPercent" step="1"> <span class="unit">%</span></label>
+                    <label>负载触发偏移 <input type="number" id="set_obc_loadTriggerOffset" step="1"> <span class="unit">V</span></label>
+                </div>
+            </div>
+
+            <!-- DCDC 参数 -->
+            <div class="settings-panel" data-panel="dcdc">
+                <div class="settings-grid">
+                    <label>步骤延时 <input type="number" id="set_dcdc_delay" step="100"> <span class="unit">ms</span></label>
+                    <label>触发超时 <input type="number" id="set_dcdc_triggerTimeOut" step="1000"> <span class="unit">ms</span></label>
+                    <label>触发调节时间 <input type="number" id="set_dcdc_adjustTime" step="100"> <span class="unit">ms</span></label>
+                    <label>重测次数 <input type="number" id="set_dcdc_reTestCount" step="1"> <span class="unit">次</span></label>
+                    <label>重测间隔 <input type="number" id="set_dcdc_reTestTime" step="100"> <span class="unit">ms</span></label>
+                    <label>直流输入限流 <input type="number" id="set_dcdc_dcInputLimitCurr" step="1"> <span class="unit">A</span></label>
+                </div>
+            </div>
+
+            <!-- 逆变参数 -->
+            <div class="settings-panel" data-panel="invert">
+                <div class="settings-grid">
+                    <label>步骤延时 <input type="number" id="set_invert_delay" step="100"> <span class="unit">ms</span></label>
+                    <label>触发超时 <input type="number" id="set_invert_triggerTimeOut" step="1000"> <span class="unit">ms</span></label>
+                    <label>触发调节时间 <input type="number" id="set_invert_adjustTime" step="100"> <span class="unit">ms</span></label>
+                    <label>重测次数 <input type="number" id="set_invert_reTestCount" step="1"> <span class="unit">次</span></label>
+                    <label>重测间隔 <input type="number" id="set_invert_reTestTime" step="100"> <span class="unit">ms</span></label>
+                    <label>CC电阻 <input type="number" id="set_invert_ccResistance" step="10"> <span class="unit">Ω</span></label>
+                </div>
+            </div>
+
+            <div class="modal-footer settings-footer">
+                <button id="btnSettingsReset" class="btn btn-primary-outline btn-uniform">恢复默认</button>
+                <div class="footer-right">
+                    <button id="btnSettingsCancel" class="btn btn-primary-outline btn-uniform">取消</button>
+                    <button id="btnSettingsSave" class="btn btn-primary btn-uniform">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/v2/app.js"></script>
+</body>
+</html>
