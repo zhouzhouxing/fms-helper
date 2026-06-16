@@ -1,6 +1,6 @@
 {
   "name": "fms-helper",
-  "version": "2.3.3",
+  "version": "2.3.4",
   "description": "FMS Helper - Frame.ManagementSystem 测试脚本配置工具",
   "main": "main.js",
   "scripts": {

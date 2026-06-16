@@ -1,5 +1,12 @@
 ﻿node_modules/
 dist/
-.sisyphus/evidence/
 .src-backup/
+.sisyphus/
 *.log
+
+# 内部文档（不上传）
+交接文档.md
+开发计划工作表.csv
+截图/
+references/
+electron-log.txt
