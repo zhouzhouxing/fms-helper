@@ -1,12 +1,19 @@
-﻿node_modules/
+﻿# 忽略所有文件
+*
+
+# 只追踪README
+!README.md
+!.gitignore
+
+# 但保留这些目录结构（git不追踪，本地保留）
+# 源码、配置、脚本等都不上传到GitHub
+main.js
+preload.js
+package.json
+package-lock.json
+src/
+scripts/
+node_modules/
 dist/
 .src-backup/
-.sisyphus/
 *.log
-
-# 内部文档（不上传）
-交接文档.md
-开发计划工作表.csv
-截图/
-references/
-electron-log.txt
